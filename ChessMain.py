@@ -3,8 +3,7 @@ Driver File, responsible for user input and diplaying the current GameState obje
 '''
 
 import pygame as p
-from ChessEngine import GameState
-
+from ChessEngine import GameState, Move   # * it call everything.
 width = height = 512
 dimension = 8
 sq_size = height // dimension
@@ -55,7 +54,7 @@ def main():
                     playerClicks.append(sqSelected) #append for both 1st and 2nd clicks
                     
                 if len(playerClicks) == 2: #after 2nd click
-                    move = gs.Move(playerClicks[0], playerClicks[1], gs.board)
+                    move = Move(playerClicks[0], playerClicks[1], gs.board)
                     if (gs.whiteToMove and move.pieceMoved[0] == 'w') and (not gs.whiteToMove and move.pieceMoved[0] == 'b'): #adicionado depois
                         print(move.getChessNotation())
                         if move in validMoves:
