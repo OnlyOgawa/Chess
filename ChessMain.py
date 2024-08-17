@@ -55,7 +55,7 @@ def main():
                     
                 if len(playerClicks) == 2: #after 2nd click
                     move = Move(playerClicks[0], playerClicks[1], gs.board)
-                    if (gs.whiteToMove and move.pieceMoved[0] == 'w') and (not gs.whiteToMove and move.pieceMoved[0] == 'b'): #adicionado depois
+                    if (gs.whiteToMove and move.pieceMoved[0] == 'w') or (not gs.whiteToMove and move.pieceMoved[0] == 'b'): #adicionado depois
                         print(move.getChessNotation())
                         if move in validMoves:
                             gs.makeMove(move)

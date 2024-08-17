@@ -48,7 +48,7 @@ class GameState():
 #All moves without considering checks.
 
     def getAllPossibleMoves(self):
-        moves = [Move((6,4), (4,4), self.board)]
+        moves = [Move((6,4), (4, 4), self.board)]
         for r in range(len(self.board)): #number of rolls
             for c in range(len(self.board[r])): # number of cols in giver row
                 turn = self.board[r][c][0]
