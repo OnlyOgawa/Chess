@@ -55,14 +55,14 @@ def main():
                     
                 if len(playerClicks) == 2: #after 2nd click
                     move = Move(playerClicks[0], playerClicks[1], gs.board)
-                    if (gs.whiteToMove and move.pieceMoved[0] == 'w') or (not gs.whiteToMove and move.pieceMoved[0] == 'b'): #adicionado depois
-                        print(move.getChessNotation())
-                        if move in validMoves:
-                            gs.makeMove(move)
-                            moveMade = True
+                    print(move.getChessNotation())
+                    if move in validMoves:
+                        gs.makeMove(move)
+                        moveMade = True
                         sqSelected = () #reset user clicks
                         playerClicks = []
-                    else: playerClicks = [sqSelected] #adicionado depois
+                    else:
+                        playerClicks = [sqSelected]
                     
             #key handlers
             elif e.type == p.KEYDOWN:
