@@ -75,9 +75,7 @@ def main():
             validMoves = gs.getValidMoves()
             moveMade = False
             
-            
-            
-                                      
+                 
         drawGameState(screen, gs)
         clock.tick(max_fps)
         p.display.flip()
