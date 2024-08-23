@@ -45,23 +45,22 @@ def main():
                 location = p.mouse.get_pos() # (x, y) location of mouse
                 col = location[0] // sq_size
                 row = location[1] // sq_size
-                
                 if sqSelected == (row, col): #the user clicked the same square twice 
                     sqSelected = () #deselect
                     playerClicks = [] #clear player clicks
                 else:        
                     sqSelected = (row, col)
                     playerClicks.append(sqSelected) #append for both 1st and 2nd clicks
-                    
                 if len(playerClicks) == 2: #after 2nd click
                     move = Move(playerClicks[0], playerClicks[1], gs.board)
                     print(move.getChessNotation())
-                    if move in validMoves:
-                        gs.makeMove(move)
-                        moveMade = True
-                        sqSelected = () #reset user clicks
-                        playerClicks = []
-                    else:
+                    for i in range(len(validMoves)):
+                        if move == validMoves[i]:
+                            gs.makeMove(validMoves[i])
+                            moveMade = True
+                            sqSelected = () #reset user clicks
+                            playerClicks = []
+                    if not moveMade:
                         playerClicks = [sqSelected]
                     
             #key handlers
