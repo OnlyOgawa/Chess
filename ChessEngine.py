@@ -26,6 +26,7 @@ class GameState():
         self.inCheck = False
         self.pins = []
         self.checks = []
+        self.enpassantPossible = () # coordinates fot eh sqaure where en passant is possible
         
         
 #Takes a Move as a parameter and executes it (this will not worl for castling, paw promotion and en-passant).
@@ -46,9 +47,16 @@ class GameState():
         if move.isPawnPromotion:
             self.board[move.endRow][move.endCol] = move.pieceMoved[0] + 'Q'
             
-        
+#Enpassant move.
+        if move.isEnpassantMove:
+            self.board[move.startRow][move.endCol] = '--' #capturing the pawn.
+#Update enpassantPossible variable.
+        if move.pieceMoved[1] == 'p' and abs(move.startRow - move.endRow) == 2: #only on 2 square pawn advance.
+            self.enpassantPossible = ((move.startRow + move.endRow) // 2, move.startCol)
+        else:
+            self.enpassantPossible = ()
+            
 # Undo the last move made.
-
     def undoMove(self):
         if len(self.moveLog) != 0: # make sure that there is a move to undo
             move = self.moveLog.pop()
@@ -60,11 +68,22 @@ class GameState():
                 self.whiteKingLocation = (move.startRow, move.startCol)
             elif move.pieceMoved == 'bK':
                 self.blackKingLocation = (move.startRow, move.startCol)
+#undo enpassant move.
+            # Example fix during undo
+            if move.isEnpassantMove:
+                self.board[move.endRow][move.endCol] = '--'  # Clear the en passant capture
+                self.board[move.startRow][move.startCol] = move.pieceMoved  # Undo the pawn move
+                self.board[move.endRow + (1 if self.whiteToMove else -1)][move.endCol] = move.pieceCaptured  # Restore captured pawn
+
+#undo 2 square advance.
+            if move.pieceMoved[1] == 'p' and abs(move.startRow - move.endRow) == 2:
+                self.enpassantPossible = ()
 
     
 #All moves considering checks.
     
     def getValidMoves(self):
+        tempEnpassantPossible = self.enpassantPossible
         moves = []
         self.inCheck, self.pins, self.checks = self.checkForPinsAndChecks()
         if self.whiteToMove:
@@ -76,22 +95,22 @@ class GameState():
         if self.inCheck:
             if len(self.checks) == 1: #only 1 check, block check or move king.
                 moves = self.getAllPossibleMoves()
-                #to block a check you must move a piece into one of the squares between the enemy piece and king.
+#to block a check you must move a piece into one of the squares between the enemy piece and king.
                 check = self.checks[0] #check info.
                 checkRow = check[0]
                 checkCol = check[1]
                 pieceChecking = self.board[checkRow][checkCol] #enemy piece causing a check.
                 validSquares = [] #square that piece can move to.
-                #if knight, must capture knight or move king, other pieces can be blocked.
+#if knight, must capture knight or move king, other pieces can be blocked.
                 if pieceChecking[1] == 'N':
                     validSquares = [(checkRow, checkCol)]
                 else:
                     for i in range(1, 8):
                         validSquare = (kingRow + check[2] * i, kingCol + check[3] * i) #check[2] and check[3] are the check directions.
                         validSquares.append(validSquare)
-                        if validSquare[0] == checkRow and validSquare[1] == checkCol: # onde tou get to piece and checks
+                        if validSquare[0] == checkRow and validSquare[1] == checkCol: #where to get to piece and checks
                             break
-                #get rid of any moves that dont block check or move king.
+#get rid of any moves that dont block check or move king.
                 for i in range(len(moves) - 1, -1, -1): #go through backwards when you are removing from a list.
                     if moves[i]. pieceMoved[1] != 'K': #move doesnt move king so it must block or capture.
                         if not (moves[i].endRow, moves[i].endCol) in validSquares: #move doesnt block check or capture piece
@@ -100,7 +119,8 @@ class GameState():
                 self.getKingMoves(kingRow, kingCol, moves)
         else: #not in check so all moves are fine.
             moves = self.getAllPossibleMoves()
-            
+        
+        self.enpassantPossible = tempEnpassantPossible
             
         return moves
                             
@@ -138,10 +158,14 @@ class GameState():
                 if self.board[r - 1][c - 1][0] == 'b': #enemy piece to capture.
                     if not piecePinned or pinDirection == (-1, -1):
                         moves.append(Move((r, c), (r - 1, c - 1), self.board))
+                elif (r - 1, c - 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r - 1, c - 1), self.board, isEnpassantMove = True))
             if c+1 <= 7: #capture to the right.
                 if self.board[r - 1][c + 1][0] == 'b': #enemy piece to capture.
                     if not piecePinned or pinDirection == (-1, 1):
                         moves.append(Move((r, c), (r - 1, c + 1),self.board))
+                elif (r - 1, c + 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r - 1, c + 1), self.board, isEnpassantMove = True))
                     
         else: #black pawn moves
             if self.board[r + 1][c] == '--':
@@ -153,10 +177,14 @@ class GameState():
                 if self.board[r + 1][c - 1][0] == 'w':
                     if not piecePinned or pinDirection == (1, -1):
                         moves.append(Move((r, c), (r + 1, c - 1), self.board))
+                elif (r + 1, c - 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r + 1, c - 1), self.board, isEnpassantMove = True))
             if c+1 <= 7: #capture to the right.
                 if self.board[r + 1][c + 1][0] == 'w':
                     if not piecePinned or pinDirection == (1, 1):
                         moves.append(Move((r, c), (r + 1, c + 1), self.board))
+                elif (r + 1, c + 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r + 1, c + 1), self.board, isEnpassantMove = True))
                 
                    
                                 
@@ -258,18 +286,18 @@ class GameState():
         for i in range(8):
             endRow = r + rowMoves[i]
             endCol = c + colMoves[i]
-            if 0 <= endRow <8 and 8 <= endCol < 8:
+            if 0 <= endRow < 8 and 0 <= endCol < 8:
                 endPiece = self.board[endRow][endCol]
                 if endPiece[0] != allyColor: #not an ally piece (empty or enemy piece).
-                    #place king on end square and check for checks
+#place king on end square and check for checks
                     if allyColor == 'w':
                         self.whiteKingLocation = (endRow, endCol)
                     else:
                         self.blackKingLocation = (endRow, endCol)
                     inCheck, pins, checks = self.checkForPinsAndChecks()
                     if not inCheck:
-                        moves.append(Move(r,c ), (endRow, endCol), self.board)
-                    #place king back on original locarion
+                        moves.append(Move((r ,c), (endRow, endCol), self.board))
+#place king back on original locarion
                     if allyColor == 'w':
                         self.whiteKingLocation = (r, c)
                     else:
@@ -293,7 +321,7 @@ class GameState():
             allyColor = 'b'
             startRow = self.blackKingLocation[0]
             startCol = self.blackKingLocation[1]
-        #check outward from king for pins and checks, keep track of pins
+#check outward from king for pins and checks, keep track of pins
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
         for j in range(len(directions)):
             d = directions[j]
@@ -310,11 +338,11 @@ class GameState():
                             break
                     elif endPiece[0] == enemyColor:
                         type = endPiece[1]
-                        #ortogonally away from king and piece is a rook.
-                        #diagonally away from king and piece is a bishop.
-                        #1 square away diagonally from king and piece is a pawn.
-                        #any direction and piece is a queen.
-                        #any direction 1 square away and piece is a king (this is necessary to prevent a king move to a square controlled by another king).
+#ortogonally away from king and piece is a rook.
+#diagonally away from king and piece is a bishop.
+#1 square away diagonally from king and piece is a pawn.
+#any direction and piece is a queen.
+#any direction 1 square away and piece is a king (this is necessary to prevent a king move to a square controlled by another king).
                         if (0 <= j <= 3 and type == 'R') or \
                                 (4 <= j <= 7 and type == 'B') or \
                                 (i == 1 and type == 'p' and ((enemyColor == 'w' and 6 <= j <= 7) or (enemyColor == 'b' and 4 <= j <= 5))) or \
@@ -332,7 +360,7 @@ class GameState():
                     break
             
             
-        #check for knight checks.
+#check for knight checks.
         knightMoves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
         for m in knightMoves:
             endRow = startRow + m[0]
@@ -354,16 +382,23 @@ class Move():
                   'e': 4, 'f': 5, 'g': 6, 'h': 7}
     colsToFiles = {v: k for k, v in filesToCol.items()}
             
-    def __init__(self, startSq, endSq, board):
+    def __init__(self, startSq, endSq, board, isEnpassantMove = False):
         self.startRow = startSq[0]
         self.startCol = startSq[1]
         self.endRow = endSq[0]
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
+#pawn promotion.
         self.isPawnPromotion = False
         if (self.pieceMoved == 'wp' and self.endRow == 0) or (self.pieceMoved == 'bp' and self.endRow == 7):
             self.isPawnPromotion = True
+#en passant.
+        self.isEnpassantMove = isEnpassantMove
+        if self.isEnpassantMove:
+            self.pieceCaptured = 'wp' if self.pieceMoved == 'bp' else 'bp'
+            
+            
         self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
                 
 #overriding the equals method
