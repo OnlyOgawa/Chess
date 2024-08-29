@@ -20,7 +20,7 @@ def loadImages():
     #we can access an image by saying 'image['wp']'
         
 '''
-The main driver for our code, will handle user input and ipdating the graphics.
+The main driver for our code, will handle user input and updating the graphics.
 '''
 def main():
     p.init()
@@ -33,7 +33,7 @@ def main():
     
     loadImages() # only once, before the while loop
     running = True
-    sqSelected = () # no square is selected, keep track os the last click of the user. (tuple: (row, col))
+    sqSelected = None # no square is selected, keep track os the last click of the user. (tuple: (row, col))
     playerClicks = [] # keep track of player clicks (two tuples:[(7, 4), (4, 4)])
     
     while running:
@@ -46,7 +46,7 @@ def main():
                 col = location[0] // sq_size
                 row = location[1] // sq_size
                 if sqSelected == (row, col): #the user clicked the same square twice 
-                    sqSelected = () #deselect
+                    sqSelected = None #deselect
                     playerClicks = [] #clear player clicks
                 else:        
                     sqSelected = (row, col)
@@ -62,12 +62,15 @@ def main():
                             playerClicks = []
                     if not moveMade:
                         playerClicks = [sqSelected]
+                        sqSelected = None
                     
             #key handlers
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: #undo when 'z' is pressed
                     gs.undoMove()
                     moveMade = True
+                    sqSelected = None
+                    playerClicks = []
                               
                     
         if moveMade:
