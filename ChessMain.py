@@ -4,6 +4,7 @@ Driver File, responsible for user input and diplaying the current GameState obje
 
 import pygame as p
 from ChessEngine import GameState, Move   # * it call everything.
+colors = [p.Color('white'), p.Color('grey')]
 width = height = 512
 dimension = 8
 sq_size = height // dimension
@@ -30,7 +31,7 @@ def main():
     gs = GameState()
     validMoves = gs.getValidMoves()
     moveMade = False #flag variable for when a move is made
-    
+    animate = False #flag variable for when we should animate a move
     loadImages() # only once, before the while loop
     running = True
     sqSelected = None # no square is selected, keep track os the last click of the user. (tuple: (row, col))
@@ -58,6 +59,7 @@ def main():
                         if move == validMoves[i]:
                             gs.makeMove(validMoves[i])
                             moveMade = True
+                            animate = True
                             sqSelected = () #reset user clicks
                             playerClicks = []
                     if not moveMade:
@@ -71,11 +73,22 @@ def main():
                     moveMade = True
                     sqSelected = None
                     playerClicks = []
+                    animate = False
+                if e.key == p.K_r: #reset the board when 'r' is pressed.
+                    gs = GameState()
+                    validMoves = gs.getValidMoves()
+                    sqSelected = ()
+                    playerClicks = []
+                    moveMade = False
+                    animate = False
                               
                     
         if moveMade:
+            if animate:
+                animateMove(gs.moveLog[-1], screen, gs.board, clock)
             validMoves = gs.getValidMoves()
             moveMade = False
+            animate = False
             
                  
         drawGameState(screen, gs, validMoves, sqSelected)
@@ -122,14 +135,43 @@ def drawBoard(screen):
             p.draw.rect(screen, color, p.Rect(c*sq_size, r*sq_size, sq_size, sq_size))
     
 '''
-Draw the pieces on the board using the current GameState.board
+Draw the pieces on the board using the current GameState.board.
 '''    
 def drawPieces(screen, board):
     for r in range(dimension):
         for c in range(dimension):
             piece = board[r][c]
-            if piece != '--': #not a empty square
+            if piece != '--': #not a empty square.
                 screen.blit(images[piece], p.Rect(c*sq_size, r*sq_size, sq_size, sq_size))
+
+
+'''
+Animating a move.
+'''
+
+def animateMove(move, screen, board, clock):
+    global colors
+    dR = move.endRow - move.startRow
+    dC = move.endCol - move.startCol
+    framesPerSquare = 10 #frames to move one square.
+    frameCount = (abs(dR) + abs(dC)) * framesPerSquare
+    for frame in range(frameCount + 1):
+        r, c = (move.startRow + dR*frame/frameCount, move.startCol + dC*frame/frameCount)
+        drawBoard(screen)
+        drawPieces(screen, board)
+#erase the piece moved from its ending square.
+        color = colors[(move.endRow + move.endCol) % 2]
+        endSquare = p.Rect(move.endCol*sq_size, move.endRow*sq_size, sq_size, sq_size)
+        p.draw.rect(screen, color, endSquare)
+#draw captured piece onto rectangle.
+        if move.pieceCaptured != '--':
+            screen.blit(images[move.pieceCaptured], endSquare)
+#draw moving piece.
+        screen.blit(images[move.pieceMoved], p.Rect(c*sq_size, r*sq_size, sq_size, sq_size))
+        p.display.flip()
+        clock.tick(60)
+    
+    
 
 
 if __name__ == '__main__':
