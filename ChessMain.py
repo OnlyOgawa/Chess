@@ -3,7 +3,10 @@ Driver File, responsible for user input and diplaying the current GameState obje
 '''
 
 import pygame as p
-from ChessEngine import GameState, Move   # * it call everything.
+from ChessEngine import GameState, Move # * it call everything.
+from SmartMoveFinder import findRandomMove
+
+
 colors = [p.Color('white'), p.Color('grey')]
 width = height = 512
 dimension = 8
@@ -36,35 +39,39 @@ def main():
     running = True
     sqSelected = None # no square is selected, keep track os the last click of the user. (tuple: (row, col))
     playerClicks = [] # keep track of player clicks (two tuples:[(7, 4), (4, 4)])
+    playerOne = True #if human is playing white, then this is true. If AI is playing then its False.
+    playerTwo = False #Same as playerOne, but for black.
     
     while running:
+        humanTurn = (gs. whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
             #mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
-                location = p.mouse.get_pos() # (x, y) location of mouse
-                col = location[0] // sq_size
-                row = location[1] // sq_size
-                if sqSelected == (row, col): #the user clicked the same square twice 
-                    sqSelected = None #deselect
-                    playerClicks = [] #clear player clicks
-                else:        
-                    sqSelected = (row, col)
-                    playerClicks.append(sqSelected) #append for both 1st and 2nd clicks
-                if len(playerClicks) == 2: #after 2nd click
-                    move = Move(playerClicks[0], playerClicks[1], gs.board)
-                    print(move.getChessNotation())
-                    for i in range(len(validMoves)):
-                        if move == validMoves[i]:
-                            gs.makeMove(validMoves[i])
-                            moveMade = True
-                            animate = True
-                            sqSelected = () #reset user clicks
-                            playerClicks = []
-                    if not moveMade:
-                        playerClicks = [sqSelected]
-                        sqSelected = None
+                if humanTurn:
+                    location = p.mouse.get_pos() # (x, y) location of mouse
+                    col = location[0] // sq_size
+                    row = location[1] // sq_size
+                    if sqSelected == (row, col): #the user clicked the same square twice 
+                        sqSelected = None #deselect
+                        playerClicks = [] #clear player clicks
+                    else:        
+                        sqSelected = (row, col)
+                        playerClicks.append(sqSelected) #append for both 1st and 2nd clicks
+                    if len(playerClicks) == 2: #after 2nd click
+                        move = Move(playerClicks[0], playerClicks[1], gs.board)
+                        print(move.getChessNotation())
+                        for i in range(len(validMoves)):
+                            if move == validMoves[i]:
+                                gs.makeMove(validMoves[i])
+                                moveMade = True
+                                animate = True
+                                sqSelected = () #reset user clicks
+                                playerClicks = []
+                        if not moveMade:
+                            playerClicks = [sqSelected]
+                            sqSelected = None
                     
             #key handlers
             elif e.type == p.KEYDOWN:
@@ -81,7 +88,13 @@ def main():
                     playerClicks = []
                     moveMade = False
                     animate = False
-                              
+#AI move finder.
+        if not humanTurn:
+            AIMove = findRandomMove(validMoves)
+            gs.makeMove(AIMove)
+            moveMade = True
+            animate = True
+        
                     
         if moveMade:
             if animate:
