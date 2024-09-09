@@ -102,7 +102,8 @@ class GameState():
         self.castleRightsLog.append(CastleRights(self.currentCastlingRights.wks, self.currentCastlingRights.wqs,
                                                  self.currentCastlingRights.bks, self.currentCastlingRights.bqs))
                     
-                        
+
+                            
 # Undo the last move made.
     def undoMove(self):
         if len(self.moveLog) != 0: # make sure that there is a move to undo
@@ -134,7 +135,9 @@ class GameState():
 #undo 2 square advance.
             if move.pieceMoved[1] == 'p' and abs(move.startRow - move.endRow) == 2:
                 self.enpassantPossible = ()
-
+                
+            self.checkmate = False
+            self.stalemate = False
     
 #All moves considering checks.
     

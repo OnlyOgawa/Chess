@@ -4,7 +4,7 @@ Driver File, responsible for user input and diplaying the current GameState obje
 
 import pygame as p
 from ChessEngine import GameState, Move # * it call everything.
-from SmartMoveFinder import findRandomMove, findBestMove
+from SmartMoveFinder import findBestMoveMinMax, findBestMove
 
 
 colors = [p.Color('white'), p.Color('grey')]
@@ -90,12 +90,16 @@ def main():
                     animate = False
 #AI move finder.
         if not humanTurn:
-            AIMove = findRandomMove(validMoves)
+            AIMove = findBestMoveMinMax(gs, validMoves)
             if AIMove is None:
                 AIMove = findBestMove(gs, validMoves)
-            gs.makeMove(AIMove)
-            moveMade = True
-            animate = True
+            if AIMove is not None:
+                gs.makeMove(AIMove)
+                moveMade = True
+                animate = True
+                
+# Update valid moves after AI move
+        validMoves = gs.getValidMoves()
         
                     
         if moveMade:
